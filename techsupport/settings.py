@@ -75,7 +75,7 @@ WSGI_APPLICATION = 'techsupport.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.pgsql',
+        'ENGINE'
         'NAME': BASE_DIR / 'db.sqlite3',
 
     }

@@ -1,9 +1,7 @@
-import django, json
-from django.shortcuts import render
-from django.db import connection
+import json
 from django.http import JsonResponse
 from django.http import HttpResponseNotFound
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse
 from base.models import *
 from django.views.decorators.csrf import csrf_exempt
 
@@ -24,10 +22,56 @@ def isAuthorized(header):
     return False
 
 # Create your views here.
-def getUsers(request, *args, **kwargs):
+@csrf_exempt
+def postLogin(request, *args, **kwargs):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_data = list(Users.objects.filter(username=data["username"]).values())
+        if (len(user_data) == 0) or (user_data[0]["password"] != data["password"]):
+            return HttpResponse('Unauthorized', status=401)
+        del user_data[0]["password"]
+        del user_data[0]["deleted_at"]
+        return JsonResponse(user_data[0])
+    else:
+        return HttpResponseNotFound()
+
+@csrf_exempt
+def responseUsers(request, *args, **kwargs):
     if request.method == "GET":
         if not isAuthorized(request.headers):
-            return HttpResponseForbidden()
-        return JsonResponse({}, safe=False)
+            return HttpResponse('Unauthorized', status=401)
+        return JsonResponse({})
+    elif request.method == "POST":
+        pass
+    elif request.method == "PUT":
+        pass
+    elif request.method == "DELETE":
+        pass
+    else:
+        return HttpResponseNotFound()
+
+@csrf_exempt
+def responseTickets(request, *args, **kwargs):
+    if request.method == "GET":
+        if not isAuthorized(request.headers):
+            return HttpResponse('Unauthorized', status=401)
+        return JsonResponse({})
+    elif request.method == "POST":
+        pass
+    elif request.method == "PUT":
+        pass
+    elif request.method == "DELETE":
+        pass
+    else:
+        return HttpResponseNotFound()
+
+@csrf_exempt
+def responseFile(request, *args, **kwargs):
+    if request.method == "GET":
+        if not isAuthorized(request.headers):
+            return HttpResponse('Unauthorized', status=401)
+        return JsonResponse({})
+    elif request.method == "POST":
+        pass
     else:
         return HttpResponseNotFound()

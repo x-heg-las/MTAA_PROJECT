@@ -17,9 +17,12 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from base.views import getUsers
+from base.views import responseUsers, responseTickets, responseFile, postLogin
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('users/', getUsers),
+    path('users/', responseUsers),
+    path('login/', postLogin),
+    path('tickets/', responseTickets),
+    path('file/', responseFile),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

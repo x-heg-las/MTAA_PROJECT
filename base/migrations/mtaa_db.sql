@@ -59,7 +59,7 @@ CREATE TABLE requests (
     description text,
     call_requested boolean,
     created_at timestamp without time zone,
-    upadated_at timestamp without time zone,
+    updated_at timestamp without time zone,
     deleted_at timestamp without time zone
 );
 

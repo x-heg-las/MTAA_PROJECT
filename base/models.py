@@ -38,14 +38,14 @@ class RequestTypes(models.Model):
 
 class Requests(models.Model):
     title = models.CharField(max_length=120)
-    answered_by_user = models.ForeignKey('Users', models.DO_NOTHING, blank=True, null=True, related_name='answered_by')
-    user = models.ForeignKey('Users', models.DO_NOTHING, related_name='requested_by_user')
+    answered_by_user = models.ForeignKey('Users', models.DO_NOTHING, blank=True, null=True, related_name='answered_by_request')
+    user = models.ForeignKey('Users', models.DO_NOTHING, related_name='user_request')
     request_type = models.ForeignKey(RequestTypes, models.DO_NOTHING)
     file = models.ForeignKey(Files, models.DO_NOTHING, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     call_requested = models.BooleanField(blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
-    upadated_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:

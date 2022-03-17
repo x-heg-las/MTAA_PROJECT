@@ -1,9 +1,14 @@
-import json
+import json, math
 from django.http import JsonResponse
 from django.http import HttpResponseNotFound
 from django.http import HttpResponse
 from base.models import *
+from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
+
+#Fields
+user_fields = ["id", "username", "profile_img_file__data", "user_type__name", "full_name", "phone_number", "created_at", "updated_at"]
+request_fields = ["id", "title", "answered_by_user__username", "user__username", "request_type__name", "description", "call_requested", "file__data", "created_at", "updated_at"]
 
 #Utility functions
 def isAuthorized(header):
@@ -37,10 +42,34 @@ def postLogin(request, *args, **kwargs):
 
 @csrf_exempt
 def responseUsers(request, *args, **kwargs):
+    if not isAuthorized(request.headers):
+        return HttpResponse('Unauthorized', status=401)
     if request.method == "GET":
-        if not isAuthorized(request.headers):
-            return HttpResponse('Unauthorized', status=401)
-        return JsonResponse({})
+        user_query = None
+        q = Q()
+        def_params = {"page": 1, "per_page": 5, "order_by": "id", "order_type": "ASC", "query": None}
+        request_params = request.GET.dict()
+        if request_params.get("id") != None:
+            user_query = list(Users.objects.filter(id=request_params.get("id")).values(*user_fields))
+            if len(user_query) != 0:
+                return JsonResponse(user_query[0])
+            else:
+                return JsonResponse({})
+        for key in def_params:
+            if request_params.get(key) != None:
+                if type(def_params[key]) == int:
+                    def_params[key] = int(request_params.get(key))
+                else:
+                    def_params[key] = request_params.get(key)
+        if def_params["order_type"] == "DESC":
+            def_params["order_by"] = ("-" + def_params["order_by"])
+        start_from = ((def_params["page"] - 1) * def_params["per_page"])
+        if def_params.get("query") != None:
+            q &= Q(full_name__icontains=def_params.get("query"))
+        user_count = Users.objects.all().filter(q).count()
+        user_query = list(Users.objects.all().filter(q).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*user_fields))
+        user_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(user_count / def_params["per_page"]), "total": user_count}
+        return JsonResponse({"items": user_query, "metadata": user_meta})
     elif request.method == "POST":
         pass
     elif request.method == "PUT":
@@ -52,10 +81,34 @@ def responseUsers(request, *args, **kwargs):
 
 @csrf_exempt
 def responseTickets(request, *args, **kwargs):
+    if not isAuthorized(request.headers):
+        return HttpResponse('Unauthorized', status=401)
     if request.method == "GET":
-        if not isAuthorized(request.headers):
-            return HttpResponse('Unauthorized', status=401)
-        return JsonResponse({})
+        ticket_query = None
+        q = Q()
+        def_params = {"page": 1, "per_page": 5, "order_by": "id", "order_type": "ASC", "query": None}
+        request_params = request.GET.dict()
+        if request_params.get("id") != None:
+            ticket_query = list(Requests.objects.filter(id=request_params.get("id")).values(*request_fields))
+            if len(ticket_query) != 0:
+                return JsonResponse(ticket_query[0])
+            else:
+                return JsonResponse({})
+        for key in def_params:
+            if request_params.get(key) != None:
+                if type(def_params[key]) == int:
+                    def_params[key] = int(request_params.get(key))
+                else:
+                    def_params[key] = request_params.get(key)
+        if def_params["order_type"] == "DESC":
+            def_params["order_by"] = ("-" + def_params["order_by"])
+        start_from = ((def_params["page"] - 1) * def_params["per_page"])
+        if def_params.get("query") != None:
+            q &= Q(title__icontains=def_params.get("query"))
+        ticket_count = Requests.objects.all().filter(q).count()
+        ticket_query = list(Requests.objects.all().filter(q).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*request_fields))
+        ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
+        return JsonResponse({"items": ticket_query, "metadata": ticket_meta})
     elif request.method == "POST":
         pass
     elif request.method == "PUT":

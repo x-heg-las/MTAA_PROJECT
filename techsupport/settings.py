@@ -77,11 +77,14 @@ WSGI_APPLICATION = 'techsupport.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'OPTIONS': {
+            'options': '-c search_path=tech_support'
+        },
         'NAME': 'MTAA', #os.getenv('NAME'),
         'USER': 'postgres',#os.getenv('USER'),
-        'PASSWORD': '',#os.getenv('PASS'),
+        'PASSWORD': '12345678',#os.getenv('PASS'),
         'HOST': 'localhost',#os.getenv('HOST'),
-        'PORT': '5433'#os.getenv('PORT'),
+        'PORT': '5432'#os.getenv('PORT'),
     }
 }
 

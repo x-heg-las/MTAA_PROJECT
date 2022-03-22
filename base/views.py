@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.http import HttpResponseNotFound
 from django.http import HttpResponse
 from base.models import *
-from . import util
+from . import util, validators
 from django.db.models import Q
 from django.core import serializers
 from django.core.exceptions import *
@@ -79,7 +79,13 @@ def responseUsers(request, *args, **kwargs):
     elif request.method == "PUT":
         pass
     elif request.method == "DELETE":
-        pass
+        try:
+            request_params = request.GET.dict()
+            user_to_delete = Users.objects.get(request_params["id"])
+            user_to_delete.delete()
+            return HttpResponse(status=204)
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound()
     else:
         return HttpResponseNotFound()
 
@@ -114,7 +120,13 @@ def responseTickets(request, *args, **kwargs):
         ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
         return JsonResponse({"items": ticket_query, "metadata": ticket_meta})
     elif request.method == "POST":
+        if not request.body:
+            return HttpResponse(status=422)
         request_body = json.loads(request.body)
+        result = validators.validateTicketEntry(request_body)
+        if not result["success"]:
+            return JsonResponse({"errors": result["errors"]}, status=422)
+
         new_ticket = Requests(
             title=request_body["title"],
             user_id=request_body["user_id"],
@@ -128,17 +140,23 @@ def responseTickets(request, *args, **kwargs):
         return JsonResponse(util.requestToDictionary(new_ticket))
 
     elif request.method == "PUT":
-        request_body = json.loads(request.body)
-        request_params = request.GET.dict()
         try:
+            if not request.body:
+                return HttpResponse(status=422)
+            request_body = json.loads(request.body)
+            request_params = request.GET.dict()
+            result = validators.validateTicketEntry(request_body, True)
+
+            if not result["success"]:
+                return JsonResponse({"errors": result["errors"]}, status=422)
+
             updated_ticket = Requests.objects.get(id=request_params["id"])
             for key, value in request_body.items():
                 util.update_model(updated_ticket, key, value)
+                updated_ticket.save()
             return JsonResponse(util.requestToDictionary(updated_ticket))
         except ObjectDoesNotExist:
             return HttpResponseNotFound()
-        except AttributeError:
-            return HttpResponse("atribute err : TODO", 404)
     elif request.method == "DELETE":
         try:
             ticket_param = request.GET.get("id")

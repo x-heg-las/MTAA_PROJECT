@@ -69,7 +69,7 @@ class Users(models.Model):
     full_name = models.CharField(max_length=120)
     phone_number = models.CharField(max_length=16, blank=True, null=True)
     created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:

@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.http import HttpResponseNotFound
 from django.http import HttpResponse
 from base.models import *
+from django.db import IntegrityError
 from . import util, validators
 from django.db.models import Q
 from django.core import serializers
@@ -75,9 +76,42 @@ def responseUsers(request, *args, **kwargs):
         user_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(user_count / def_params["per_page"]), "total": user_count}
         return JsonResponse({"items": user_query, "metadata": user_meta})
     elif request.method == "POST":
-        pass
+        try:
+            if not request.body:
+                return HttpResponse(status=422)
+            request_body = json.loads(request.body)
+            request_headers = request.headers
+            result = validators.validateUserEntry(request_body)
+            if not result["success"]:
+                return JsonResponse({"errors": result["errors"]}, status=422)
+            profile_image = None
+            try:
+                if request_body["profile_img_file_id"]:
+                    profile_image = Files.objects.get(id=request_body["profile_img_file_id"])
+            except ObjectDoesNotExist:
+                profile_image = None
+            new_user = Users(
+                username=request_body["username"],
+                profile_img_file=profile_image,
+                user_type=UserTypes.objects.get(id=request_body["user_type_id"]),
+                password=request_body["password"],
+                full_name=request_body["full_name"],
+                phone_number=request_body["phone_number"],
+                created_at=datetime.now()
+            )
+            new_user.save()
+            return JsonResponse(util.userToDictionaru(new_user), status=201)
+        except IntegrityError:
+            return JsonResponse({"errors": {
+                "reason": "Record already exists"
+            }}, status=409)
     elif request.method == "PUT":
-        pass
+        if not request.body:
+            return HttpResponse(status=422)
+        request_body = json.loads(request.body)
+        result = validators.validateUserEntry(request_body, updating=True)
+        if not result["success"]:
+            return JsonResponse({"errors": result["errors"]}, status=422)
     elif request.method == "DELETE":
         try:
             request_params = request.GET.dict()
@@ -137,7 +171,7 @@ def responseTickets(request, *args, **kwargs):
             created_at=datetime.now()
         )
         new_ticket.save()
-        return JsonResponse(util.requestToDictionary(new_ticket))
+        return JsonResponse(util.requestToDictionary(new_ticket), status=201)
 
     elif request.method == "PUT":
         try:
@@ -145,8 +179,7 @@ def responseTickets(request, *args, **kwargs):
                 return HttpResponse(status=422)
             request_body = json.loads(request.body)
             request_params = request.GET.dict()
-            result = validators.validateTicketEntry(request_body, True)
-
+            result = validators.validateTicketEntry(request_body, updating=True)
             if not result["success"]:
                 return JsonResponse({"errors": result["errors"]}, status=422)
 

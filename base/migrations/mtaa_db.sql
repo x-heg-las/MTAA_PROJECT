@@ -16,7 +16,7 @@ ALTER SEQUENCE file_types_id_seq OWNED BY file_types.id;
 
 CREATE TABLE files (
     id integer NOT NULL,
-    data bytea,
+    data text,
     file_type_id integer NOT NULL,
     size integer NOT NULL,
     created_at timestamp without time zone,
@@ -160,7 +160,7 @@ ALTER TABLE ONLY users
     ADD CONSTRAINT users_username_key UNIQUE (username);
 
 ALTER TABLE ONLY files
-    ADD CONSTRAINT files_file_type_id_fkey FOREIGN KEY (file_type_id) REFERENCES request_types(id);
+    ADD CONSTRAINT files_file_type_id_fkey FOREIGN KEY (file_type_id) REFERENCES file_types(id);
 
 ALTER TABLE ONLY requests
     ADD CONSTRAINT requests_answered_by_user_id_fkey FOREIGN KEY (answered_by_user_id) REFERENCES users(id);

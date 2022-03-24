@@ -2,21 +2,23 @@ import json, math
 from django.http import JsonResponse
 from django.http import HttpResponseNotFound
 from django.http import HttpResponse
+from django.http import FileResponse
 from base.models import *
 from django.db import IntegrityError
 from . import util, validators
 from django.db.models import Q
-from django.core import serializers
 from django.core.exceptions import *
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
+from django.core.files.base import ContentFile
+from django.utils import timezone
 
 #Fields
 user_fields = ["id", "username", "profile_img_file__data", "user_type__name", "full_name", "phone_number", "created_at", "updated_at"]
 request_fields = ["id", "title", "answered_by_user__username", "user__username", "request_type__name", "description", "call_requested", "file__data", "created_at", "updated_at"]
+file_fields = ["id", "filename", "file_type__name", "size" "data"]
 
 #Utility functions
-def isAuthorized(header):
+def isAuthorized(header) -> bool:
     """
     Function to check if user is authorized.\n
     Returns True if user is authorized.\n
@@ -97,7 +99,8 @@ def responseUsers(request, *args, **kwargs):
                 password=request_body["password"],
                 full_name=request_body["full_name"],
                 phone_number=request_body["phone_number"],
-                created_at=datetime.now()
+                created_at=timezone.now(),
+                updated_at=timezone.now()
             )
             new_user.save()
             return JsonResponse(util.userToDictionaru(new_user), status=201)
@@ -168,7 +171,8 @@ def responseTickets(request, *args, **kwargs):
             #file=Files.get(id=request_body["file_id"]),
             description=request_body["description"],
             call_requested=request_body["call_requested"],
-            created_at=datetime.now()
+            created_at=timezone.now(),
+            updated_at=timezone.now()
         )
         new_ticket.save()
         return JsonResponse(util.requestToDictionary(new_ticket), status=201)
@@ -202,12 +206,39 @@ def responseTickets(request, *args, **kwargs):
         return HttpResponseNotFound()
 
 @csrf_exempt
-def responseFile(request, *args, **kwargs):
+def responsePostFile(request, *args, **kwargs):
+    if not isAuthorized(request.headers):
+        return HttpResponse('Unauthorized', status=401)
+    if request.method == "POST":
+        file_name = kwargs.get("fileName")
+        fileExt = file_name.split(".")[-1]
+        new_file = Files(
+            file_type=FileTypes.objects.get(name=fileExt),
+            data=ContentFile(request.body, name=file_name),
+            size=len(request.body),
+            created_at=timezone.now(),
+            updated_at=timezone.now())
+        new_file.save()
+        return FileResponse(open(new_file.data.path, "rb"))
+    else:
+        return HttpResponseNotFound()
+
+def responseGetFile(request, *args, **kwargs):
+    if not isAuthorized(request.headers):
+        return HttpResponse('Unauthorized', status=401)
     if request.method == "GET":
-        if not isAuthorized(request.headers):
-            return HttpResponse('Unauthorized', status=401)
-        return JsonResponse({})
-    elif request.method == "POST":
-        pass
+        q = Q()
+        def_params = {"query": None}
+        request_params = request.GET.dict()
+        if request_params.get("id") != None:
+            file_query = Files.objects.filter(id=request_params.get("id")).get()
+            return FileResponse(open(file_query.data.path, "rb"))
+        for key in def_params:
+            if request_params.get(key) != None:
+                def_params[key] = request_params.get(key)
+        if def_params.get("query") != None:
+            q &= Q(data__icontains=def_params.get("query"))
+        file_entry = Files.objects.filter(q).order_by("id").all()[0]
+        return FileResponse(open(file_entry.data.path, "rb"))
     else:
         return HttpResponseNotFound()

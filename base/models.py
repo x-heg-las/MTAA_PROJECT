@@ -17,8 +17,8 @@ class FileTypes(models.Model):
 
 
 class Files(models.Model):
-    data = models.BinaryField(blank=True, null=True)
-    file_type = models.ForeignKey('RequestTypes', models.DO_NOTHING)
+    data = models.FileField(blank=True, null=True, upload_to='files/')
+    file_type = models.ForeignKey(FileTypes, models.DO_NOTHING)
     size = models.IntegerField()
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)

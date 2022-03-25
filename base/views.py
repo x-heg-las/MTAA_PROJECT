@@ -219,7 +219,7 @@ def responsePostFile(request, *args, **kwargs):
             created_at=timezone.now(),
             updated_at=timezone.now())
         new_file.save()
-        return FileResponse(open(new_file.data.path, "rb"))
+        return JsonResponse(util.fileToDictionary(new_file), status=201)
     else:
         return HttpResponseNotFound()
 

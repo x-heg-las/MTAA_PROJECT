@@ -15,6 +15,13 @@ def userToDictionaru(user) ->dict:
     return output
 
 
+def fileToDictionary(file) ->dict:
+    output = {"id": file.id, "file_name": file.data.name.split("/")[-1], "file_type_id": file.file_type_id,
+              "size": file.data.size, "created_at": file.created_at,
+              "updated_at": file.updated_at}
+    return output
+
+
 def update_model(self, key, value):
     getattr(self, key)
     setattr(self, key, value)

@@ -61,7 +61,7 @@ def responseUsers(request, *args, **kwargs):
             if len(user_query) != 0:
                 return JsonResponse(user_query[0])
             else:
-                return JsonResponse({})
+                return HttpResponseNotFound() #TODO: HTTPRESPONSE 404
         for key in def_params:
             if request_params.get(key) != None:
                 if type(def_params[key]) == int:
@@ -111,10 +111,16 @@ def responseUsers(request, *args, **kwargs):
     elif request.method == "PUT":
         if not request.body:
             return HttpResponse(status=422)
+        params = request.GET.dict()
         request_body = json.loads(request.body)
         result = validators.validateUserEntry(request_body, updating=True)
         if not result["success"]:
             return JsonResponse({"errors": result["errors"]}, status=422)
+        user_to_update = Users.objects.get(id=params.get("id"))
+        for key, value in request_body.items():
+            util.update_model(user_to_update, key, value)
+        user_to_update.save()
+        return JsonResponse(util.userToDictionaru(user_to_update), status=200)
     elif request.method == "DELETE":
         try:
             request_params = request.GET.dict()
@@ -180,7 +186,7 @@ def responseTickets(request, *args, **kwargs):
     elif request.method == "PUT":
         try:
             if not request.body:
-                return HttpResponse(status=422)
+                return JsonResponse({"errors": "No request body provided"}, status=422)
             request_body = json.loads(request.body)
             request_params = request.GET.dict()
             result = validators.validateTicketEntry(request_body, updating=True)
@@ -190,7 +196,7 @@ def responseTickets(request, *args, **kwargs):
             updated_ticket = Requests.objects.get(id=request_params["id"])
             for key, value in request_body.items():
                 util.update_model(updated_ticket, key, value)
-                updated_ticket.save()
+            updated_ticket.save()
             return JsonResponse(util.requestToDictionary(updated_ticket))
         except ObjectDoesNotExist:
             return HttpResponseNotFound()

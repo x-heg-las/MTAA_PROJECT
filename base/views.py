@@ -124,7 +124,7 @@ def responseUsers(request, *args, **kwargs):
     elif request.method == "DELETE":
         try:
             request_params = request.GET.dict()
-            user_to_delete = Users.objects.get(request_params["id"])
+            user_to_delete = Users.objects.get(id=request_params["id"])
             user_to_delete.delete()
             return HttpResponse(status=204)
         except ObjectDoesNotExist:

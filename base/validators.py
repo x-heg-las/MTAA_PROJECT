@@ -1,8 +1,8 @@
 from . import schemas
 from jsonschema import validate, exceptions, ErrorTree, Draft7Validator
 
-tickets_fields = ["title", "user_id", "description", "request_type_id", "call_requested"]
-users_fields = ["username", "full_name", "phone_number", "profile_img_file_id", "user_type_id", "password"]
+tickets_fields = ["title", "user", "description", "request_type__name", "call_requested", "file"]
+users_fields = ["username", "full_name", "phone_number", "profile_img_file", "user_type__name", "password"]
 
 
 def validateTicketEntry(data, updating=False):

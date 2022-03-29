@@ -6,20 +6,20 @@ ticket_schema = {
         "title": {
             "type": "string",
         },
-        "user_id": {
+        "user": {
             "type": "number"
         },
         "descrption": {
             "type": "string"
         },
-        "request_type_id": {
-            "type": "number"
+        "request_type__name": {
+            "type": "string"
         },
         "call_requested": {
             "type": "boolean"
         }
     },
-    "required": ["title", "user_id", "description", "request_type_id", "call_requested"]
+    "required": ["title", "user", "description", "request_type__name", "call_requested"]
 }
 
 ticket_schema_update = {
@@ -30,14 +30,14 @@ ticket_schema_update = {
         "title": {
             "type": "string",
         },
-        "user_id": {
+        "user": {
             "type": "number"
         },
         "descrption": {
             "type": "string"
         },
-        "request_type_id": {
-            "type": "number"
+        "request_type__name": {
+            "type": "string"
         },
         "call_requested": {
             "type": "boolean"
@@ -62,14 +62,14 @@ user_schema = {
         "full_name": {
             "type": "string"
         },
-        "user_type_id": {
-            "type": "number"
+        "user_type__name": {
+            "type": "string"
         },
-        "profile_img_file_id": {
+        "profile_img_file": {
             "type": ["number", "null"]
         }
     },
-    "required": ["username", "full_name", "phone_number", "profile_img_file_id", "user_type_id"]
+    "required": ["username", "full_name", "phone_number", "profile_img_file", "user_type__name"]
 }
 
 user_schema_update = {
@@ -89,10 +89,10 @@ user_schema_update = {
         "full_name": {
             "type": "string"
         },
-        "user_type_id": {
-            "type": "number"
+        "user_type__name": {
+            "type": "string"
         },
-        "profile_img_file_id": {
+        "profile_img_file": {
             "type": ["number", "null"]
         }
     },

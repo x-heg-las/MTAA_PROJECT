@@ -94,7 +94,7 @@ def responseUsers(request, *args, **kwargs):
             new_user = Users(
                 username=request_body["username"],
                 profile_img_file=profile_image,
-                user_type=UserTypes.objects.get(id=request_body["user_type_id"]),
+                user_type=UserTypes.objects.get(name=request_body["user_type__name"]),
                 password=request_body["password"],
                 full_name=request_body["full_name"],
                 phone_number=request_body["phone_number"],
@@ -169,12 +169,14 @@ def responseTickets(request, *args, **kwargs):
         result = validators.validateTicketEntry(request_body)
         if not result["success"]:
             return JsonResponse({"errors": result["errors"]}, status=422)
-
+        appendix = None
+        if request_body.get("file"):
+            appendix = Files.objects.get(id=request_body["file"])
         new_ticket = Requests(
             title=request_body["title"],
-            user_id=request_body["user_id"],
-            request_type_id=request_body["request_type_id"],
-            #file=Files.get(id=request_body["file_id"]),
+            user_id=request_body["user"],
+            request_type_id=RequestTypes.objects.filter(name=request_body["request_type__name"]).values("id")[0]["id"],
+            file=appendix,
             description=request_body["description"],
             call_requested=request_body["call_requested"],
             created_at=timezone.now(),
@@ -238,14 +240,14 @@ def responseGetFile(request, *args, **kwargs):
         def_params = {"query": None}
         request_params = request.GET.dict()
         if request_params.get("id") != None:
-            file_query = Files.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).get()
+            file_query = Files.objects.filter(id=request_params.get("id")).get()
             return FileResponse(open(file_query.data.path, "rb"))
         for key in def_params:
             if request_params.get(key) != None:
                 def_params[key] = request_params.get(key)
         if def_params.get("query") != None:
             q &= Q(data__icontains=def_params.get("query"))
-        file_entry = Files.objects.filter(q).exclude(deleted_at__isnull=False).order_by("id").all()[0]
+        file_entry = Files.objects.filter(q).order_by("id").all()[0]
         return FileResponse(open(file_entry.data.path, "rb"))
     else:
         return HttpResponseNotFound()

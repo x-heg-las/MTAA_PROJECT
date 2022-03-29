@@ -1,7 +1,7 @@
 def requestToDictionary(request) ->dict:
     output = {"id": request.id, "title": request.title, "user": request.user.id, "answered_by_user": request.answered_by_user,
               "request_type__name": request.request_type.name, "description": request.description,
-              "call_reqested": request.call_requested, "file": request.file, "created_at": request.created_at,
+              "call_reqested": request.call_requested, "file": request.file.id, "created_at": request.created_at,
               "updated_at": request.updated_at}
     return output
 

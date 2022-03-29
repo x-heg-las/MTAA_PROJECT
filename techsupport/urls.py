@@ -18,6 +18,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from base.views import responseUsers, responseTickets, responseGetFile, responsePostFile, postLogin
+from base.type_geters import userTypes, requestTypes, fileTypes
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +28,7 @@ urlpatterns = [
     path('tickets/', responseTickets),
     path('file/<str:fileName>/', responsePostFile),
     path('file/', responseGetFile),
+    path('usertypes/', userTypes),
+    path('requesttypes/', requestTypes),
+    path('filetypes/', fileTypes),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -70,10 +70,11 @@ def responseUsers(request, *args, **kwargs):
         if def_params["order_type"] == "DESC":
             def_params["order_by"] = ("-" + def_params["order_by"])
         start_from = ((def_params["page"] - 1) * def_params["per_page"])
+        end_items = (def_params["page"] * def_params["per_page"])
         if def_params.get("query") != None:
             q &= Q(full_name__icontains=def_params.get("query"))
         user_count = Users.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
-        user_query = list(Users.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*user_fields))
+        user_query = list(Users.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*user_fields))
         user_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(user_count / def_params["per_page"]), "total": user_count}
         return JsonResponse({"items": user_query, "metadata": user_meta})
     elif request.method == "POST":
@@ -87,8 +88,8 @@ def responseUsers(request, *args, **kwargs):
                 return JsonResponse({"errors": result["errors"]}, status=422)
             profile_image = None
             try:
-                if request_body["profile_img_file_id"]:
-                    profile_image = Files.objects.get(id=request_body["profile_img_file_id"])
+                if request_body["profile_img_file"]:
+                    profile_image = Files.objects.get(id=request_body["profile_img_file"])
             except ObjectDoesNotExist:
                 profile_image = None
             new_user = Users(
@@ -117,13 +118,16 @@ def responseUsers(request, *args, **kwargs):
             return JsonResponse({"errors": result["errors"]}, status=422)
         user_to_update = Users.objects.get(id=params.get("id"))
         for key, value in request_body.items():
+            if key == "user_type__name":
+                util.update_model(user_to_update, "user_type", UserTypes.objects.get(name=value))
+                continue
             util.update_model(user_to_update, key, value)
         user_to_update.save()
         return JsonResponse(util.userToDictionary(user_to_update), status=200)
     elif request.method == "DELETE":
         try:
             request_params = request.GET.dict()
-            user_to_delete = Users.objects.get(id=request_params["id"])
+            user_to_delete = Users.objects.exclude(deleted_at__isnull=False).get(id=request_params["id"])
             user_to_delete.deleted_at = timezone.now()
             user_to_delete.save()
             return HttpResponse(status=204)
@@ -156,10 +160,11 @@ def responseTickets(request, *args, **kwargs):
         if def_params["order_type"] == "DESC":
             def_params["order_by"] = ("-" + def_params["order_by"])
         start_from = ((def_params["page"] - 1) * def_params["per_page"])
+        end_items = (def_params["page"] * def_params["per_page"])
         if def_params.get("query") != None:
             q &= (Q(title__icontains=def_params.get("query")) | Q(description__icontains=def_params.get("query")))
         ticket_count = Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
-        ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*request_fields))
+        ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*request_fields))
         ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
         return JsonResponse({"items": ticket_query, "metadata": ticket_meta})
     elif request.method == "POST":
@@ -194,9 +199,11 @@ def responseTickets(request, *args, **kwargs):
             result = validators.validateTicketEntry(request_body, updating=True)
             if not result["success"]:
                 return JsonResponse({"errors": result["errors"]}, status=422)
-
             updated_ticket = Requests.objects.get(id=request_params["id"])
             for key, value in request_body.items():
+                if key == "request_type__name":
+                    util.update_model(updated_ticket, "request_type", RequestTypes.objects.get(name=value))
+                    continue
                 util.update_model(updated_ticket, key, value)
             updated_ticket.save()
             return JsonResponse(util.requestToDictionary(updated_ticket))
@@ -205,7 +212,7 @@ def responseTickets(request, *args, **kwargs):
     elif request.method == "DELETE":
         try:
             ticket_param = request.GET.get("id")
-            ticket_query = Requests.objects.get(id=ticket_param)
+            ticket_query = Requests.objects.exclude(deleted_at__isnull=False).get(id=ticket_param)
             ticket_query.deleted_at = timezone.now()
             ticket_query.save()
             return HttpResponse(status=204)

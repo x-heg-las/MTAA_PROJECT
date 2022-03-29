@@ -23,7 +23,7 @@ def fileToDictionary(file) ->dict:
 
 
 def typeToDictionary(type) ->dict:
-    output = {"id": type.id, "name": type.name};
+    output = {"id": type.id, "name": type.name}
     return output
 
 

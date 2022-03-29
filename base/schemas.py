@@ -5,6 +5,7 @@ ticket_schema = {
     "properties": {
         "title": {
             "type": "string",
+            "minLength": 1
         },
         "user": {
             "type": "number"
@@ -29,6 +30,7 @@ ticket_schema_update = {
     "properties": {
         "title": {
             "type": "string",
+            "minLength": 1
         },
         "user": {
             "type": "number"
@@ -51,10 +53,12 @@ user_schema = {
     "id": "http://jsonschema.net",
     "properties": {
         "username": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
         },
         "password": {
-            "type": "string"
+            "type": "string",
+            "minLength": 8
         },
         "phone_number": {
             "type": "string"
@@ -78,10 +82,12 @@ user_schema_update = {
     "id": "http://jsonschema.net",
     "properties": {
         "username": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
         },
         "password": {
-            "type": "string"
+            "type": "string",
+            "minLength": 8
         },
         "phone_number": {
             "type": "string"

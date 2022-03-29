@@ -13,9 +13,8 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 
 #Fields
-user_fields = ["id", "username", "profile_img_file__data", "user_type__name", "full_name", "phone_number", "created_at", "updated_at"]
-request_fields = ["id", "title", "answered_by_user__username", "user__username", "request_type__name", "description", "call_requested", "file__data", "created_at", "updated_at"]
-file_fields = ["id", "filename", "file_type__name", "size" "data"]
+user_fields = ["id", "username", "profile_img_file", "user_type__name", "full_name", "phone_number", "created_at", "updated_at"]
+request_fields = ["id", "title", "answered_by_user", "user", "request_type__name", "description", "call_requested", "file", "created_at", "updated_at"]
 
 #Utility functions
 def isAuthorized(header) -> bool:
@@ -57,11 +56,11 @@ def responseUsers(request, *args, **kwargs):
         def_params = {"page": 1, "per_page": 5, "order_by": "id", "order_type": "ASC", "query": None}
         request_params = request.GET.dict()
         if request_params.get("id") != None:
-            user_query = list(Users.objects.filter(id=request_params.get("id")).values(*user_fields))
+            user_query = list(Users.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).values(*user_fields))
             if len(user_query) != 0:
                 return JsonResponse(user_query[0])
             else:
-                return HttpResponseNotFound() #TODO: HTTPRESPONSE 404
+                return HttpResponseNotFound()
         for key in def_params:
             if request_params.get(key) != None:
                 if type(def_params[key]) == int:
@@ -73,8 +72,8 @@ def responseUsers(request, *args, **kwargs):
         start_from = ((def_params["page"] - 1) * def_params["per_page"])
         if def_params.get("query") != None:
             q &= Q(full_name__icontains=def_params.get("query"))
-        user_count = Users.objects.all().filter(q).count()
-        user_query = list(Users.objects.all().filter(q).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*user_fields))
+        user_count = Users.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
+        user_query = list(Users.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*user_fields))
         user_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(user_count / def_params["per_page"]), "total": user_count}
         return JsonResponse({"items": user_query, "metadata": user_meta})
     elif request.method == "POST":
@@ -103,7 +102,7 @@ def responseUsers(request, *args, **kwargs):
                 updated_at=timezone.now()
             )
             new_user.save()
-            return JsonResponse(util.userToDictionaru(new_user), status=201)
+            return JsonResponse(util.userToDictionary(new_user), status=201)
         except IntegrityError:
             return JsonResponse({"errors": {
                 "reason": "Record already exists"
@@ -120,12 +119,13 @@ def responseUsers(request, *args, **kwargs):
         for key, value in request_body.items():
             util.update_model(user_to_update, key, value)
         user_to_update.save()
-        return JsonResponse(util.userToDictionaru(user_to_update), status=200)
+        return JsonResponse(util.userToDictionary(user_to_update), status=200)
     elif request.method == "DELETE":
         try:
             request_params = request.GET.dict()
             user_to_delete = Users.objects.get(id=request_params["id"])
-            user_to_delete.delete()
+            user_to_delete.deleted_at = timezone.now()
+            user_to_delete.save()
             return HttpResponse(status=204)
         except ObjectDoesNotExist:
             return HttpResponseNotFound()
@@ -142,11 +142,11 @@ def responseTickets(request, *args, **kwargs):
         def_params = {"page": 1, "per_page": 5, "order_by": "id", "order_type": "ASC", "query": None}
         request_params = request.GET.dict()
         if request_params.get("id") != None:
-            ticket_query = list(Requests.objects.filter(id=request_params.get("id")).values(*request_fields))
+            ticket_query = list(Requests.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).values(*request_fields))
             if len(ticket_query) != 0:
                 return JsonResponse(ticket_query[0])
             else:
-                return JsonResponse({})
+                return HttpResponseNotFound()
         for key in def_params:
             if request_params.get(key) != None:
                 if type(def_params[key]) == int:
@@ -157,9 +157,9 @@ def responseTickets(request, *args, **kwargs):
             def_params["order_by"] = ("-" + def_params["order_by"])
         start_from = ((def_params["page"] - 1) * def_params["per_page"])
         if def_params.get("query") != None:
-            q &= Q(title__icontains=def_params.get("query"))
-        ticket_count = Requests.objects.all().filter(q).count()
-        ticket_query = list(Requests.objects.all().filter(q).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*request_fields))
+            q &= (Q(title__icontains=def_params.get("query")) | Q(description__icontains=def_params.get("query")))
+        ticket_count = Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
+        ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:def_params["per_page"]].values(*request_fields))
         ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
         return JsonResponse({"items": ticket_query, "metadata": ticket_meta})
     elif request.method == "POST":
@@ -204,7 +204,8 @@ def responseTickets(request, *args, **kwargs):
         try:
             ticket_param = request.GET.get("id")
             ticket_query = Requests.objects.get(id=ticket_param)
-            ticket_query.delete()
+            ticket_query.deleted_at = timezone.now()
+            ticket_query.save()
             return HttpResponse(status=204)
         except ObjectDoesNotExist:
             return HttpResponseNotFound()
@@ -237,14 +238,14 @@ def responseGetFile(request, *args, **kwargs):
         def_params = {"query": None}
         request_params = request.GET.dict()
         if request_params.get("id") != None:
-            file_query = Files.objects.filter(id=request_params.get("id")).get()
+            file_query = Files.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).get()
             return FileResponse(open(file_query.data.path, "rb"))
         for key in def_params:
             if request_params.get(key) != None:
                 def_params[key] = request_params.get(key)
         if def_params.get("query") != None:
             q &= Q(data__icontains=def_params.get("query"))
-        file_entry = Files.objects.filter(q).order_by("id").all()[0]
+        file_entry = Files.objects.filter(q).exclude(deleted_at__isnull=False).order_by("id").all()[0]
         return FileResponse(open(file_entry.data.path, "rb"))
     else:
         return HttpResponseNotFound()

@@ -1,17 +1,17 @@
 def requestToDictionary(request) ->dict:
-    output = {"id": request.id, "title": request.title, "user_id": request.user.id,
-              "request_type_id": request.request_type.id, "description": request.description,
-              "call_reqested": request.call_requested, "created_at": request.created_at,
+    output = {"id": request.id, "title": request.title, "user": request.user.id, "answered_by_user": request.answered_by_user,
+              "request_type__name": request.request_type.id, "description": request.description,
+              "call_reqested": request.call_requested, "file": request.file, "created_at": request.created_at,
               "updated_at": request.updated_at}
     return output
 
 
-def userToDictionaru(user) ->dict:
-    output = {"id": user.id, "username": user.username, "user_type_id": user.user_type.id,
+def userToDictionary(user) ->dict:
+    output = {"id": user.id, "username": user.username, "user_type__name": user.user_type.id,
               "full_name": user.full_name, "phone_number": user.phone_number, "created_at": user.created_at,
               "updated_at": user.updated_at}
     if user.profile_img_file:
-        output["profile_img_file_id"] = user.profile_img_file.id
+        output["profile_img_file"] = user.profile_img_file.id
     return output
 
 

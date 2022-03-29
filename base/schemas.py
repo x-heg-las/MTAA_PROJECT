@@ -66,7 +66,7 @@ user_schema = {
             "type": "number"
         },
         "profile_img_file_id": {
-            "type": "number"
+            "type": ["number", "null"]
         }
     },
     "required": ["username", "full_name", "phone_number", "profile_img_file_id", "user_type_id"]
@@ -93,7 +93,7 @@ user_schema_update = {
             "type": "number"
         },
         "profile_img_file_id": {
-            "type": "number"
+            "type": ["number", "null"]
         }
     },
 }

@@ -22,6 +22,11 @@ def fileToDictionary(file) ->dict:
     return output
 
 
+def typeToDictionary(type) ->dict:
+    output = {"id": type.id, "name": type.name};
+    return output
+
+
 def update_model(self, key, value):
     getattr(self, key)
     setattr(self, key, value)

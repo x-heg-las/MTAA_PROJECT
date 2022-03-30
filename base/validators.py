@@ -45,7 +45,7 @@ def validateTicketEntry(data, updating=False):
                 )
                 continue
 
-            if not key in data:
+            if not key in data and not updating:
                 errors.append(
                     {
                         "field": key,
@@ -88,7 +88,7 @@ def validateUserEntry(data, updating=False):
         error_tree = ErrorTree(validator.iter_errors(data))
 
         for key in users_fields:
-            if not key in data:
+            if not key in data and not updating:
                 errors.append(
                     {
                         "field": key,
@@ -100,7 +100,7 @@ def validateUserEntry(data, updating=False):
                 errors.append(
                     {
                         "field": key,
-                        "reason": "wong va"
+                        "reason": "wrong value"
                     }
                 )
 

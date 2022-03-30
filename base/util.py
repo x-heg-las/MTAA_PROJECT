@@ -1,7 +1,7 @@
 def requestToDictionary(request) ->dict:
     output = {"id": request.id, "title": request.title, "user": request.user.id,
               "request_type__name": request.request_type.name, "description": request.description,
-              "call_reqested": request.call_requested, "created_at": request.created_at,
+              "call_requested": request.call_requested, "created_at": request.created_at,
               "updated_at": request.updated_at}
     if request.answered_by_user:
         output["answered_by_user"] = request.answered_by_user.id

@@ -211,7 +211,7 @@ def responseTickets(request, *args, **kwargs):
             for key, value in request_body.items():
                 if key == "request_type__name":
                     util.update_model(updated_ticket, "request_type", RequestTypes.objects.get(name=value))
-
+                    continue
                 if key == "user":
                     util.update_model(updated_ticket, "user", Users.objects.get(id=value))
                     continue

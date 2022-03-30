@@ -43,6 +43,9 @@ ticket_schema_update = {
         },
         "call_requested": {
             "type": "boolean"
+        },
+        "answered_by_user": {
+            "type": "number"
         }
     },
 }

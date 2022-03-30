@@ -1,8 +1,17 @@
 def requestToDictionary(request) ->dict:
-    output = {"id": request.id, "title": request.title, "user": request.user.id, "answered_by_user": request.answered_by_user,
+    output = {"id": request.id, "title": request.title, "user": request.user.id,
               "request_type__name": request.request_type.name, "description": request.description,
-              "call_reqested": request.call_requested, "file": request.file.id, "created_at": request.created_at,
+              "call_reqested": request.call_requested, "created_at": request.created_at,
               "updated_at": request.updated_at}
+    if request.answered_by_user:
+        output["answered_by_user"] = request.answered_by_user.id
+    else:
+        output["answered_by_user"] = None
+
+    if request.file:
+        output["file"] = request.file.id
+    else:
+        output["file"] = None
     return output
 
 
@@ -12,6 +21,8 @@ def userToDictionary(user) ->dict:
               "updated_at": user.updated_at}
     if user.profile_img_file:
         output["profile_img_file"] = user.profile_img_file.id
+    else:
+        output["profile_img_file"] = None
     return output
 
 

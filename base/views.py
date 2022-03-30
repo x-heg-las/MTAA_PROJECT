@@ -111,19 +111,25 @@ def responseUsers(request, *args, **kwargs):
     elif request.method == "PUT":
         if not request.body:
             return HttpResponse(status=422)
-        params = request.GET.dict()
-        request_body = json.loads(request.body)
-        result = validators.validateUserEntry(request_body, updating=True)
-        if not result["success"]:
-            return JsonResponse({"errors": result["errors"]}, status=422)
-        user_to_update = Users.objects.get(id=params.get("id"))
-        for key, value in request_body.items():
-            if key == "user_type__name":
-                util.update_model(user_to_update, "user_type", UserTypes.objects.get(name=value))
-                continue
-            util.update_model(user_to_update, key, value)
-        user_to_update.save()
-        return JsonResponse(util.userToDictionary(user_to_update), status=200)
+        try:
+            params = request.GET.dict()
+            request_body = json.loads(request.body)
+            result = validators.validateUserEntry(request_body, updating=True)
+            if not result["success"]:
+                return JsonResponse({"errors": result["errors"]}, status=422)
+            user_to_update = Users.objects.get(id=params.get("id"), deleted_at=None)
+            for key, value in request_body.items():
+                if key == "user_type__name":
+                    util.update_model(user_to_update, "user_type", UserTypes.objects.get(name=value))
+                    continue
+                util.update_model(user_to_update, key, value)
+            user_to_update.save()
+            return JsonResponse(util.userToDictionary(user_to_update), status=200)
+        except IntegrityError as ie:
+            return JsonResponse({"errors": {"reason": "Integrity error"}}, status=422)
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound()
+
     elif request.method == "DELETE":
         try:
             request_params = request.GET.dict()
@@ -163,8 +169,10 @@ def responseTickets(request, *args, **kwargs):
         end_items = (def_params["page"] * def_params["per_page"])
         if def_params.get("query") != None:
             q &= (Q(title__icontains=def_params.get("query")) | Q(description__icontains=def_params.get("query")))
+
         ticket_count = Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
         ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*request_fields))
+
         ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
         return JsonResponse({"items": ticket_query, "metadata": ticket_meta})
     elif request.method == "POST":
@@ -203,6 +211,12 @@ def responseTickets(request, *args, **kwargs):
             for key, value in request_body.items():
                 if key == "request_type__name":
                     util.update_model(updated_ticket, "request_type", RequestTypes.objects.get(name=value))
+
+                if key == "user":
+                    util.update_model(updated_ticket, "user", Users.objects.get(id=value))
+                    continue
+                if key == "answered_by_user":
+                    util.update_model(updated_ticket, "answered_by_user", Users.objects.get(id=value))
                     continue
                 util.update_model(updated_ticket, key, value)
             updated_ticket.save()
@@ -254,7 +268,9 @@ def responseGetFile(request, *args, **kwargs):
                 def_params[key] = request_params.get(key)
         if def_params.get("query") != None:
             q &= Q(data__icontains=def_params.get("query"))
-        file_entry = Files.objects.filter(q).order_by("id").all()[0]
-        return FileResponse(open(file_entry.data.path, "rb"))
+        file_entry = Files.objects.filter(q).order_by("id").all()
+        if len(file_entry) == 0:
+            return HttpResponseNotFound()
+        return FileResponse(open(file_entry[0].data.path, "rb"))
     else:
         return HttpResponseNotFound()

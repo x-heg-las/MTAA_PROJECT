@@ -1,7 +1,7 @@
 from . import schemas
 from jsonschema import validate, exceptions, ErrorTree, Draft7Validator
 
-tickets_fields = ["title", "user", "description", "request_type__name", "call_requested", "file"]
+tickets_fields = ["title", "user", "description", "request_type__name", "call_requested", "file", "answered_by_user"]
 users_fields = ["username", "full_name", "phone_number", "profile_img_file", "user_type__name", "password"]
 
 
@@ -36,19 +36,20 @@ def validateTicketEntry(data, updating=False):
         error_tree = ErrorTree(validator.iter_errors(data))
 
         for key in tickets_fields:
+            if key in error_tree:
+                errors.append(
+                    {
+                        "field": key,
+                        "reason": "wrong value"
+                    }
+                )
+                continue
+
             if not key in data:
                 errors.append(
                     {
                         "field": key,
                         "reason": "missing"
-                    }
-                )
-
-            if key in error_tree:
-                errors.append(
-                    {
-                        "field": key,
-                        "reason": "wong data type"
                     }
                 )
 
@@ -99,7 +100,7 @@ def validateUserEntry(data, updating=False):
                 errors.append(
                     {
                         "field": key,
-                        "reason": "wong data type"
+                        "reason": "wong va"
                     }
                 )
 

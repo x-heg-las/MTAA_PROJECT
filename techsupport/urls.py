@@ -17,18 +17,21 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from base.views import responseUsers, responseTickets, responseGetFile, responsePostFile, postLogin
+from base import views
 from base.type_geters import userTypes, requestTypes, fileTypes
+from rest_framework_simplejwt import views as jwt_views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('users/', responseUsers),
-    path('login/', postLogin),
-    path('tickets/', responseTickets),
-    path('file/<str:fileName>/', responsePostFile),
-    path('file/', responseGetFile),
+    path('users/', views.UsersView.as_view(), name='users'),
+    #path('login/', postLogin),
+    path('tickets/', views.TicketsView.as_view(), name='tickets'),
+    path('file/<str:fileName>/', views.FilePostView.as_view(), name='file_upload'),
+    path('file/', views.FileGetView.as_view(), name='file_get'),
     path('usertypes/', userTypes),
     path('requesttypes/', requestTypes),
     path('filetypes/', fileTypes),
+    path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -41,6 +41,24 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+#AUTH_USER_MODEL = 'base.Users'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'base.auth.CustomJWT',
+    ],
+}
+
+SIMPLE_JWT = {
+    'USER_AUTHENTICATION_RULE': 'base.auth.authRule',
+}
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'base.auth.UsersBackend'
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -85,7 +103,7 @@ DATABASES = {
         'USER': 'postgres',#os.getenv('USER'),
         'PASSWORD': '12345678',#os.getenv('PASS'),
         'HOST': 'localhost',#os.getenv('HOST'),
-        'PORT': '5433'#os.getenv('PORT'),
+        'PORT': '5432'#os.getenv('PORT'),
     }
 }
 

@@ -1,23 +1,20 @@
 from django.contrib.auth.backends import BaseBackend
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from base.models import Users
-from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken, TokenError
+from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken
 from rest_framework_simplejwt.settings import api_settings
-from django.db.models import BooleanField, Value
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 
 def authRule(user):
     return user is not None
 
 class UsersBackend(BaseBackend):
     def get_user(self, user_id):
-        userObj = Users.objects.filter(id=user_id).annotate(is_authenticated=Value(True, output_field=BooleanField()))\
-            .annotate(is_active=Value(True, output_field=BooleanField())).first()
+        userObj = Users.objects.filter(id=user_id).first()
         return userObj
 
     def authenticate(self, request, username=None, password=None):
-        user = Users.objects.filter(username=username).annotate(is_authenticated=Value(True, output_field=BooleanField()))\
-            .annotate(is_active=Value(True, output_field=BooleanField())).first()
+        user = Users.objects.filter(username=username).first()
         if user == None:
             return None
         if user.password == password:
@@ -45,6 +42,9 @@ class CustomJWT(JWTAuthentication):
 
         return user
 
-class CustomIsAuthenticated(BasePermission):
+class CustomIsAuthenticated(IsAuthenticated):
     def has_permission(self, request, view):
-        return bool(request.user)
+        token_exists = True
+        if "Authorization" not in request.headers:
+            token_exists = False
+        return bool(request.user and token_exists)

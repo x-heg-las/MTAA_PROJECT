@@ -25,7 +25,7 @@ class UsersView(APIView):
         if request.method == "GET":
             user_query = None
             q = Q()
-            def_params = {"page": 1, "per_page": 5, "order_by": "id", "order_type": "ASC", "query": None}
+            def_params = {"page": 1, "per_page": -1, "order_by": "id", "order_type": "ASC", "query": None}
             request_params = request.GET.dict()
             if request_params.get("id") != None:
                 user_query = list(Users.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).values(*user_fields))
@@ -41,14 +41,19 @@ class UsersView(APIView):
                         def_params[key] = request_params.get(key)
             if def_params["order_type"] == "DESC":
                 def_params["order_by"] = ("-" + def_params["order_by"])
-            start_from = ((def_params["page"] - 1) * def_params["per_page"])
-            end_items = (def_params["page"] * def_params["per_page"])
             if def_params.get("query") != None:
                 q &= Q(full_name__icontains=def_params.get("query"))
             user_count = Users.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
-            user_query = list(Users.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*user_fields))
-            user_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(user_count / def_params["per_page"]), "total": user_count}
-            return Response({"items": user_query, "metadata": user_meta})
+            if (def_params["per_page"] == -1):
+                user_query = list(Users.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"]).values(*user_fields))
+                user_meta = {"total": user_count}
+                return Response({"items": user_query, "metadata": user_meta})
+            else:
+                start_from = ((def_params["page"] - 1) * def_params["per_page"])
+                end_items = (def_params["page"] * def_params["per_page"])
+                user_query = list(Users.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*user_fields))
+                user_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(user_count / def_params["per_page"]), "total": user_count}
+                return Response({"items": user_query, "metadata": user_meta})
     
     @csrf_exempt
     def post(self, request, *args, **kwargs):
@@ -122,10 +127,16 @@ class TicketsView(APIView):
     def get(self, request, *args, **kwargs):
         ticket_query = None
         q = Q()
-        def_params = {"page": 1, "per_page": 5, "order_by": "id", "order_type": "ASC", "query": None}
+        def_params = {"page": 1, "per_page": -1, "order_by": "id", "order_type": "ASC", "query": None, "status": None}
         request_params = request.GET.dict()
         if request_params.get("id") != None:
             ticket_query = list(Requests.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).values(*request_fields))
+            if len(ticket_query) != 0:
+                return Response(ticket_query[0])
+            else:
+                return Response(status=404)
+        if request_params.get("user_id") != None:
+            ticket_query = list(Requests.objects.filter(user__id=int(request_params.get("user_id"))).exclude(deleted_at__isnull=False).values(*request_fields))
             if len(ticket_query) != 0:
                 return Response(ticket_query[0])
             else:
@@ -138,16 +149,21 @@ class TicketsView(APIView):
                     def_params[key] = request_params.get(key)
         if def_params["order_type"] == "DESC":
             def_params["order_by"] = ("-" + def_params["order_by"])
-        start_from = ((def_params["page"] - 1) * def_params["per_page"])
-        end_items = (def_params["page"] * def_params["per_page"])
         if def_params.get("query") != None:
             q &= (Q(title__icontains=def_params.get("query")) | Q(description__icontains=def_params.get("query")))
-
+        if def_params.get("status") != None:
+            q &= Q(request_type__name=def_params.get("status"))
         ticket_count = Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
-        ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*request_fields))
-
-        ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
-        return Response({"items": ticket_query, "metadata": ticket_meta})
+        if (def_params["per_page"] == -1):
+            ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"]).values(*request_fields))
+            ticket_meta = {"total": ticket_count}
+            return Response({"items": ticket_query, "metadata": ticket_meta})
+        else:
+            start_from = ((def_params["page"] - 1) * def_params["per_page"])
+            end_items = (def_params["page"] * def_params["per_page"])
+            ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"])[start_from:end_items].values(*request_fields))
+            ticket_meta = {"page": def_params["page"], "per_page": def_params["per_page"], "pages": math.ceil(ticket_count / def_params["per_page"]), "total": ticket_count}
+            return Response({"items": ticket_query, "metadata": ticket_meta})
     
     @csrf_exempt
     def post(self, request, *args, **kwargs):

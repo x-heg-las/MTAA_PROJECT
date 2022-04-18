@@ -4,7 +4,7 @@ from base.auth import CustomIsAuthenticated
 from base.models import UserTypes, FileTypes, RequestTypes
 from base.util import typeToDictionary
 
-class UserTypes(APIView):
+class UserTypesView(APIView):
     permission_classes = (CustomIsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
@@ -14,7 +14,7 @@ class UserTypes(APIView):
             response.append(typeToDictionary(type))
         return Response({"items": response})
 
-class FileTypes(APIView):
+class FileTypesView(APIView):
     permission_classes = (CustomIsAuthenticated,)
 
     def get(request, *args, **kwargs):
@@ -24,7 +24,7 @@ class FileTypes(APIView):
             response.append(typeToDictionary(type))
         return Response({"items": response})
 
-class RequestTypes(APIView):
+class RequestTypesView(APIView):
     permission_classes = (CustomIsAuthenticated,)
 
     def get(request, *args, **kwargs):

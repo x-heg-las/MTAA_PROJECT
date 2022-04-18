@@ -129,16 +129,10 @@ class TicketsView(APIView):
     def get(self, request, *args, **kwargs):
         ticket_query = None
         q = Q()
-        def_params = {"page": 1, "per_page": -1, "order_by": "id", "order_type": "ASC", "query": None, "status": None}
+        def_params = {"page": 1, "per_page": -1, "order_by": "id", "order_type": "ASC", "query": None, "status": None, "user_id": None}
         request_params = request.GET.dict()
         if request_params.get("id") != None:
             ticket_query = list(Requests.objects.filter(id=request_params.get("id")).exclude(deleted_at__isnull=False).values(*request_fields))
-            if len(ticket_query) != 0:
-                return Response(ticket_query[0])
-            else:
-                return Response(status=404)
-        if request_params.get("user_id") != None:
-            ticket_query = list(Requests.objects.filter(user__id=int(request_params.get("user_id"))).exclude(deleted_at__isnull=False).values(*request_fields))
             if len(ticket_query) != 0:
                 return Response(ticket_query[0])
             else:
@@ -155,6 +149,8 @@ class TicketsView(APIView):
             q &= (Q(title__icontains=def_params.get("query")) | Q(description__icontains=def_params.get("query")))
         if def_params.get("status") != None:
             q &= Q(request_type__name=def_params.get("status"))
+        if def_params.get("user_id") != None:
+            q &= Q(user__id=int(def_params.get("user_id")))
         ticket_count = Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).count()
         if (def_params["per_page"] == -1):
             ticket_query = list(Requests.objects.all().filter(q).exclude(deleted_at__isnull=False).order_by(def_params["order_by"]).values(*request_fields))

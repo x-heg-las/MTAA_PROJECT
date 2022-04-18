@@ -14,7 +14,7 @@ from base.auth import CustomIsAuthenticated
 
 #Fields
 user_fields = ["id", "username", "profile_img_file", "user_type__name", "full_name", "phone_number", "created_at", "updated_at"]
-request_fields = ["id", "title", "answered_by_user", "user", "request_type__name", "description", "call_requested", "file", "created_at", "updated_at"]
+request_fields = ["id", "title", "answered_by_user", "answer", "user", "request_type__name", "description", "call_requested", "file", "created_at", "updated_at"]
 
 # Create your views here.
 

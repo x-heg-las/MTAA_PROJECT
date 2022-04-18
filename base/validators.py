@@ -1,7 +1,7 @@
 from . import schemas
 from jsonschema import validate, exceptions, ErrorTree, Draft7Validator
 
-tickets_fields = ["title", "user", "description", "request_type__name", "call_requested", "file", "answered_by_user"]
+tickets_fields = ["title", "user", "description", "request_type__name", "call_requested", "file", "answered_by_user", "answer"]
 users_fields = ["username", "full_name", "phone_number", "profile_img_file", "user_type__name", "password"]
 
 

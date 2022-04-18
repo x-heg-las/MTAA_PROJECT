@@ -18,6 +18,9 @@ ticket_schema = {
         },
         "call_requested": {
             "type": "boolean"
+        },
+        "answer": {
+            "type": "string"
         }
     },
     "required": ["title", "user", "description", "request_type__name", "call_requested"]
@@ -46,6 +49,9 @@ ticket_schema_update = {
         },
         "answered_by_user": {
             "type": "number"
+        },
+        "answer": {
+            "type": "string"
         }
     },
 }

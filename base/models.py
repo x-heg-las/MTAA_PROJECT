@@ -39,6 +39,7 @@ class RequestTypes(models.Model):
 class Requests(models.Model):
     title = models.CharField(max_length=120)
     answered_by_user = models.ForeignKey('Users', models.DO_NOTHING, blank=True, null=True, related_name='answered_by_request')
+    answer = models.TextField(blank=True, null=True)
     user = models.ForeignKey('Users', models.DO_NOTHING, related_name='user_request')
     request_type = models.ForeignKey(RequestTypes, models.DO_NOTHING)
     file = models.ForeignKey(Files, models.DO_NOTHING, blank=True, null=True)

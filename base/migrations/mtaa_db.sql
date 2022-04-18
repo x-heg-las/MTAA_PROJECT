@@ -53,6 +53,7 @@ CREATE TABLE requests (
     id integer NOT NULL,
     title character varying(120) NOT NULL,
     answered_by_user_id integer,
+    answer text,
     user_id integer NOT NULL,
     request_type_id integer NOT NULL,
     file_id integer,

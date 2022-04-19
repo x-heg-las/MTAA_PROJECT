@@ -10,11 +10,11 @@ def authRule(user):
 
 class UsersBackend(BaseBackend):
     def get_user(self, user_id):
-        userObj = Users.objects.filter(id=user_id).first()
+        userObj = Users.objects.exclude(deleted_at__isnull=False).filter(id=user_id).first()
         return userObj
 
     def authenticate(self, request, username=None, password=None):
-        user = Users.objects.filter(username=username).first()
+        user = Users.objects.exclude(deleted_at__isnull=False).filter(username=username).first()
         if user == None:
             return None
         if user.password == password:

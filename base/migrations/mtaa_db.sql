@@ -180,3 +180,20 @@ ALTER TABLE ONLY users
 
 ALTER TABLE ONLY users
     ADD CONSTRAINT users_user_type_id_fkey FOREIGN KEY (user_type_id) REFERENCES user_types(id);
+
+INSERT INTO file_types (name) VALUES
+    ('jpg'),
+    ('png'),
+    ('pdf'),
+    ('zip'),
+    ('jpeg');
+
+INSERT INTO request_types (name) VALUES
+    ('Techical'),
+    ('Other'),
+    ('Relationship');
+
+INSERT INTO user_types (name) VALUES
+    ('general'),
+    ('admin'),
+    ('support');
